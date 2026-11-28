@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" style="--accent-color: #ffffff; --card-bg: rgba(14, 14, 16, 0.45);">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kryxi</title>
+    <link rel="icon" type="image/png" href="assets/pfp.webp">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-color: #ffffff;
+            --card-bg: rgba(15, 15, 15, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --glow-strength: 15px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+        }
+        .font-mono-custom {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Background Video & Image */
+        #bg-media-container {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            background: #050505;
+        }
+        #bg-video, #bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+        /* Subtle Scanlines & Vignette */
+        .vignette-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.85) 100%);
+        }
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            opacity: 0.35;
+        }
+        /* Click to Enter Overlay */
+        #enter-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background-color: rgba(5, 5, 5, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+        }
+        #enter-screen.hidden-overlay {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .enter-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            letter-spacing: 0.2em;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+            animation: pulseGlow 2.2s infinite ease-in-out;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.45; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+        /* Main Glass Card */
+        .profile-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        /* Username Glow */
+        .username-glow {
+            color: var(--accent-color);
+            text-shadow: 0 0 var(--glow-strength) rgba(255, 255, 255, 0.65), 0 0 30px rgba(255, 255, 255, 0.25);
+        }
+        /* Avatar Ring */
+        .avatar-wrapper {
+            position: relative;
+        }
+        .avatar-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.05), rgba(255,255,255,0.4));
+            z-index: -1;
+            animation: spinSlow 8s linear infinite;
+        }
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* Social Icon Hover */
+        .social-btn {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            color: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .social-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.25);
+        }
+        /* Custom Range Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            height: 4px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+        /* Particle Canvas */
+        #particles-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+        }
+        /* Typing Cursor */
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            z-index: 100;
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            color: #fff;
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Badge-ek és Customize gomb teljes elrejtése */
+        #badges-container,
+        .badges-row,
+        #customize-trigger,
+        #customize-btn,
+        #editor-drawer {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Click to Enter Screen -->
+    <div id="enter-screen" onclick="enterSite()">
+        <span class="enter-text">click to enter...</span>
+    </div>
+
+    <!-- Background Video & Image -->
+    <div id="bg-media-container">
+        <video id="bg-video" loop muted playsinline src="assets/background.mp4"></video>
+        <img id="bg-image" class="hidden" alt="Background">
+    </div>
+
+    <!-- Overlays & Snow/Particle Effect -->
+    <div class="vignette-overlay"></div>
+    <div class="scanlines"></div>
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Hidden Audio Element -->
+    <audio id="bg-audio" loop preload="auto" src="assets/songg.mp3"></audio>
+
+    <!-- Top-Left Volume Control -->
+    <div id="top-controls" class="fixed top-5 left-5 z-30 flex items-center gap-2.5 opacity-0 transition-opacity duration-700">
+        <div class="flex items-center gap-2.5 bg-black/50 backdrop-blur-md border border-white/10 px-3.5 py-2 rounded-2xl hover:border-white/25 transition-all group">
+            <button id="mute-btn" onclick="toggleMute()" class="text-white/80 hover:text-white transition-colors w-5 text-center" title="Mute / Unmute">
+                <i id="volume-icon" class="fas fa-volume-high text-sm"></i>
+            </button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" oninput="setVolume(this.value)" class="w-20 sm:w-24">
+        </div>
+    </div>
+
+    <!-- Main Center Container -->
+    <main id="main-content" class="relative z-10 w-full h-full flex flex-col items-center justify-center px-4 transition-all duration-1000 opacity-0 scale-95">
+        
+        <!-- Profile Card -->
+        <div id="profile-card" class="profile-card w-full max-w-[440px] rounded-3xl p-7 sm:p-8 flex flex-col items-center text-center relative">
+            
+            <!-- Avatar -->
+            <div class="avatar-wrapper mb-4">
+                <div class="avatar-ring"></div>
+                <img id="display-avatar" src="assets/pfp.webp" alt="Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-black/80 shadow-xl">
+                <!-- Online Status Indicator -->
+                <span id="status-dot" class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-400 border-[3px] border-[#0d0d0d] shadow-[0_0_10px_#34d399]" title="Online"></span>
+            </div>
+
+            <!-- Username -->
+            <div class="flex flex-col items-center gap-1.5 mb-2">
+                <div class="flex items-center justify-center gap-2">
+                    <h1 id="display-username" class="text-2xl sm:text-3xl font-bold tracking-tight username-glow">Kryxi</h1>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div id="location-wrapper" class="flex items-center justify-center gap-1.5 text-xs text-white/50 mb-3 font-mono-custom">
+                <i class="fas fa-location-dot text-[11px]"></i>
+                <span id="display-location">Hungary</span>
+            </div>
+
+            <!-- Bio with Typewriter Effect -->
+            <p class="text-sm sm:text-[15px] text-white/85 font-normal leading-relaxed max-w-[350px] min-h-[24px] mb-5">
+                <span id="display-bio"></span><span class="cursor-blink text-white/70">|</span>
+            </p>
+
+            <!-- Discord Presence / Activity Card -->
+            <div id="presence-card" class="w-full bg-white/[0.03] border border-white/[0.07] rounded-2xl p-3 mb-5 flex items-center gap-3 text-left">
+                <div class="relative shrink-0">
+                    <img id="presence-avatar" src="assets/pfp.webp" class="w-11 h-11 rounded-xl object-cover" alt="Discord">
+                    <span id="discord-status-dot" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#121212]"></span>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <div class="flex items-center gap-1.5">
+                        <span id="display-discord-tag" class="text-xs font-semibold text-white truncate">Kryxi_999</span>
+                    </div>
+                    <p id="display-activity" class="text-xs text-white/55 truncate mt-0.5">Loading Discord status...</p>
+                </div>
+                <button onclick="copyDiscord()" class="shrink-0 text-xs px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white/75 hover:text-white border border-white/10 transition-all" title="Copy Discord Username">
+                    <i class="far fa-copy"></i>
+                </button>
+            </div>
+
+            <!-- Social Links Grid -->
+            <div id="social-links-container" class="flex flex-wrap items-center justify-center gap-3 w-full mb-5"></div>
+
+            <!-- Divider -->
+            <div class="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4"></div>
+
+            <!-- Bottom Bar: Audio Track Info & Profile Views -->
+            <div class="w-full flex items-center justify-between text-xs text-white/55 px-1">
+                <!-- Now Playing -->
+                <div class="flex items-center gap-2 overflow-hidden max-w-[68%]">
+                    <button onclick="togglePlayPause()" class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white shrink-0 transition-colors">
+                        <i id="play-pause-icon" class="fas fa-play text-[10px]"></i>
+                    </button>
+                    <div class="truncate font-mono-custom text-[11px]">
+                        <span id="display-song-title">Drowning - Amotti</span>
+                    </div>
+                </div>
+
+                <!-- Profile Views Counter -->
+                <div class="flex items-center gap-1.5 font-mono-custom text-[11px] bg-white/[0.04] px-2.5 py-1 rounded-full border border-white/[0.06]" title="Profile Views">
+                    <i class="far fa-eye text-white/70"></i>
+                    <span id="view-counter">1338</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notification (csak Discord név másolásakor jelenik meg) -->
+    <div id="toast"></div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        const DISCORD_USER_ID = "716152825775915059";
+
+        const config = {
+            username: "Kryxi",
+            bio: "Your only limits are in your mind. A winner is just a loser who tried once more.",
+            location: "Hungary",
+            discordTag: "Kryxi_999",
+            avatarUrl: "assets/pfp.webp",
+            bgUrl: "assets/background.mp4",
+            audioUrl: "assets/songg.mp3",
+            songTitle: "Drowning - Amotti",
+            accentColor: "#ffffff",
+            cardOpacity: 0.45,
+            showPresence: true,
+            showParticles: false,
+            enableTilt: true,
+            socials: [
+                { platform: "tiktok", url: "https://www.tiktok.com/@kryxi07?_r=1&_t=ZN-9507tL1N0kU" },
+                { platform: "instagram", url: "https://www.instagram.com/kryxikaa?igsh=MTV3Ymg2OW1sZnV3OQ%3D%3D&utm_source=qr" },
+                { platform: "twitch", url: "https://www.twitch.tv/kryxikaa" },
+                { platform: "steam", url: "https://steamcommunity.com/profiles/76561199220266064/" },
+                { platform: "twitter", url: "https://x.com/kryxi777?s=21" }
+            ]
+        };
+
+        const SOCIAL_ICONS = {
+            discord: "fab fa-discord",
+            youtube: "fab fa-youtube",
+            github: "fab fa-github",
+            twitter: "fab fa-x-twitter",
+            instagram: "fab fa-instagram",
+            tiktok: "fab fa-tiktok",
+            spotify: "fab fa-spotify",
+            twitch: "fab fa-twitch",
+            steam: "fab fa-steam",
+            telegram: "fab fa-telegram",
+            website: "fas fa-globe"
+        };
+
+        let typewriterTimeout = null;
+        let isEntered = false;
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        function init() {
+            localStorage.removeItem('gunslol_bio_config');
+            applyConfigToDOM();
+            initViewsCounter();
+            initParticles();
+            initCardTilt();
+            updateDiscordStatus();
+            setInterval(updateDiscordStatus, 15000);
+        }
+
+        function applyConfigToDOM() {
+            document.title = config.username;
+            document.getElementById('display-username').textContent = config.username;
+            document.getElementById('display-location').textContent = config.location;
+            document.getElementById('display-discord-tag').textContent = config.discordTag;
+            document.getElementById('display-song-title').textContent = config.songTitle;
+
+            document.getElementById('display-avatar').src = config.avatarUrl;
+            document.getElementById('presence-avatar').src = config.avatarUrl;
+
+            document.documentElement.style.setProperty('--accent-color', config.accentColor);
+            document.documentElement.style.setProperty('--card-bg', `rgba(14, 14, 16, ${config.cardOpacity})`);
+
+            const container = document.getElementById('social-links-container');
+            container.innerHTML = '';
+            config.socials.forEach(item => {
+                if (!item.url) return;
+                const iconClass = SOCIAL_ICONS[item.platform] || 'fas fa-link';
+                const a = document.createElement('a');
+                a.href = item.url;
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+                a.className = "social-btn w-11 h-11 rounded-2xl flex items-center justify-center text-lg";
+                a.title = item.platform.charAt(0).toUpperCase() + item.platform.slice(1);
+                a.innerHTML = `<i class="${iconClass}"></i>`;
+                container.appendChild(a);
+            });
+
+            startTypewriter(config.bio);
+        }
+
+        // ==========================================
+        // LIVE DISCORD PRESENCE (LANYARD API)
+        // ==========================================
+        async function updateDiscordStatus() {
+            if (!DISCORD_USER_ID) return;
+            try {
+                const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_USER_ID}`);
+                const json = await res.json();
+                if (!json.success) return;
+
+                const data = json.data;
+                const user = data.discord_user;
+
+                // Discord Avatar frissítése
+                if (user.avatar) {
+                    const avatarExt = user.avatar.startsWith("a_") ? "gif" : "png";
+                    const avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${avatarExt}?size=256`;
+                    const discordAvatarEl = document.getElementById('presence-avatar');
+                    if (discordAvatarEl) discordAvatarEl.src = avatarUrl;
+                }
+
+                // Discord név frissítése
+                const discordNameEl = document.getElementById('display-discord-tag');
+                if (discordNameEl) {
+                    discordNameEl.textContent = user.global_name || user.username;
+                    config.discordTag = user.username;
+                }
+
+                // Státusz pötty színe (online, idle, dnd, offline)
+                const statusColors = {
+                    online: "bg-emerald-400",
+                    idle: "bg-amber-400",
+                    dnd: "bg-rose-500",
+                    offline: "bg-zinc-500"
+                };
+                const dotColor = statusColors[data.discord_status] || "bg-zinc-500";
+                const dcDot = document.getElementById('discord-status-dot');
+                const mainDot = document.getElementById('status-dot');
+                if (dcDot) dcDot.className = `absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${dotColor} border-2 border-[#121212]`;
+                if (mainDot) mainDot.className = `absolute bottom-1 right-1 w-4 h-4 rounded-full ${dotColor} border-[3px] border-[#0d0d0d]`;
+
+                // Aktivitás / státusz szöveg frissítése
+                const activityEl = document.getElementById('display-activity');
+                if (activityEl) {
+                    if (data.listening_to_spotify && data.spotify) {
+                        activityEl.textContent = `Listening to ${data.spotify.song} - ${data.spotify.artist}`;
+                    } else if (data.activities && data.activities.length > 0) {
+                        const game = data.activities.find(a => a.type === 0);
+                        const custom = data.activities.find(a => a.type === 4);
+                        if (game) {
+                            activityEl.textContent = `Playing ${game.name}${game.details ? ' - ' + game.details : ''}`;
+                        } else if (custom && custom.state) {
+                            activityEl.textContent = custom.state;
+                        } else {
+                            activityEl.textContent = data.discord_status === "dnd" ? "Do Not Disturb" : data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
+                        }
+                    } else {
+                        const labels = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" };
+                        activityEl.textContent = labels[data.discord_status] || "Offline";
+                    }
+                }
+            } catch (err) {
+                console.error("Discord Lanyard hiba:", err);
+            }
+        }
+
+        // ==========================================
+        // CLICK TO ENTER & MEDIA PLAYBACK
+        // ==========================================
+        function enterSite() {
+            if (isEntered) return;
+            isEntered = true;
+
+            const overlay = document.getElementById('enter-screen');
+            overlay.classList.add('hidden-overlay');
+
+            const main = document.getElementById('main-content');
+            main.classList.remove('opacity-0', 'scale-95');
+            main.classList.add('opacity-100', 'scale-100');
+
+            document.getElementById('top-controls').classList.remove('opacity-0');
+
+            const video = document.getElementById('bg-video');
+            if (video) video.play().catch(() => {});
+
+            const audio = document.getElementById('bg-audio');
+            audio.volume = parseFloat(document.getElementById('volume-slider').value);
+            audio.play().then(() => {
+                document.getElementById('play-pause-icon').className = 'fas fa-pause text-[10px]';
+            }).catch(() => {
+                document.getElementById('play-pause-icon').className = 'fas fa-play text-[10px]';
+            });
+        }
+
+        function togglePlayPause() {
+            const audio = document.getElementById('bg-audio');
+            const icon = document.getElementById('play-pause-icon');
+            if (audio.paused) {
+                audio.play();
+                icon.className = 'fas fa-pause text-[10px]';
+            } else {
+                audio.pause();
+                icon.className = 'fas fa-play text-[10px]';
+            }
+        }
+
+        function setVolume(val) {
+            const audio = document.getElementById('bg-audio');
+            audio.volume = val;
+            audio.muted = (val == 0);
+            updateVolumeIcon(val);
+        }
+
+        function toggleMute() {
+            const audio = document.getElementById('bg-audio');
+            const slider = document.getElementById('volume-slider');
+            audio.muted = !audio.muted;
+            if (audio.muted) {
+                updateVolumeIcon(0);
+            } else {
+                if (slider.value == 0) slider.value = 0.5;
+                audio.volume = slider.value;
+                updateVolumeIcon(slider.value);
+            }
+        }
+
+        function updateVolumeIcon(val) {
+            const icon = document.getElementById('volume-icon');
+            if (val == 0) icon.className = 'fas fa-volume-xmark text-sm text-red-400';
+            else if (val < 0.5) icon.className = 'fas fa-volume-low text-sm';
+            else icon.className = 'fas fa-volume-high text-sm';
+        }
+
+        // ==========================================
+        // TYPEWRITER EFFECT
+        // ==========================================
+        function startTypewriter(text) {
+            if (typewriterTimeout) clearTimeout(typewriterTimeout);
+            const el = document.getElementById('display-bio');
+            el.textContent = '';
+            let i = 0;
+            let isDeleting = false;
+
+            function tick() {
+                if (!isDeleting) {
+                    el.textContent = text.substring(0, i + 1);
+                    i++;
+                    if (i < text.length) {
+                        typewriterTimeout = setTimeout(tick, 55);
+                    } else {
+                        typewriterTimeout = setTimeout(() => {
+                            isDeleting = true;
+                            tick();
+                        }, 3200);
+                    }
+                } else {
+                    el.textContent = text.substring(0, i - 1);
+                    i--;
+                    if (i > 0) {
+                        typewriterTimeout = setTimeout(tick, 30);
+                    } else {
+                        isDeleting = false;
+                        typewriterTimeout = setTimeout(tick, 600);
+                    }
+                }
+            }
+            tick();
+        }
+
+        // ==========================================
+        // 3D TILT EFFECT ON CARD
+        // ==========================================
+        function initCardTilt() {
+            const card = document.getElementById('profile-card');
+            document.addEventListener('mousemove', (e) => {
+                if (!config.enableTilt || window.innerWidth < 640) {
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+                    return;
+                }
+                const rect = card.getBoundingClientRect();
+                const cardCenterX = rect.left + rect.width / 2;
+                const cardCenterY = rect.top + rect.height / 2;
+                const deltaX = (e.clientX - cardCenterX) / (window.innerWidth / 2);
+                const deltaY = (e.clientY - cardCenterY) / (window.innerHeight / 2);
+
+                const rotateY = deltaX * 7;
+                const rotateX = -deltaY * 7;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+            });
+        }
+
+        // ==========================================
+        // PARTICLES & VIEWS COUNTER
+        // ==========================================
+        function initParticles() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const particles = Array.from({ length: 55 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2 + 0.6,
+                speedY: Math.random() * 0.6 + 0.2,
+                speedX: (Math.random() - 0.5) * 0.3,
+                opacity: Math.random() * 0.5 + 0.15
+            }));
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                if (config.showParticles) {
+                    particles.forEach(p => {
+                        p.y += p.speedY;
+                        p.x += p.speedX;
+                        if (p.y > height) { p.y = -5; p.x = Math.random() * width; }
+                        if (p.x > width) p.x = 0;
+                        if (p.x < 0) p.x = width;
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                        ctx.fill();
+                    });
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function initViewsCounter() {
+            let views = parseInt(localStorage.getItem('gunslol_profile_views') || '1337', 10);
+            views += 1;
+            localStorage.setItem('gunslol_profile_views', views.toString());
+            document.getElementById('view-counter').textContent = views.toLocaleString();
+        }
+
+        function copyDiscord() {
+            navigator.clipboard.writeText(config.discordTag).then(() => {
+                showToast(`Copied "${config.discordTag}" to clipboard!`);
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        init();
+    </script>
+</body>
+</html>
