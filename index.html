@@ -466,41 +466,35 @@
         }
 
 // ==========================================
-        // VALÓDI GLOBÁLIS NÉZETTSÉGSZÁMLÁLÓ (MINDEN ESZKÖZÖN KÖZÖS)
+        // VALÓDI ÉLŐ GLOBÁLIS SZÁMLÁLÓ (FIREBASE)
         // ==========================================
+        const FIREBASE_DB_URL = "https://kryxis-f67f2-default-rtdb.europe-west1.firebasedatabase.app";
+
         async function initViewsCounter() {
             const counterEl = document.getElementById('view-counter');
-            const namespace = 'kryxi-bio-hun-2026';
-            const key = 'total-views';
+            const url = `${FIREBASE_DB_URL}/views.json`;
 
             try {
-                // 1. Elsődleges globális szerver (minden látogatónál +1 a közös adatbázisban)
-                const res = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`, {
-                    cache: 'no-store'
+                // 1. Lekérjük az aktuális közös számot (ha még nincs, 0-ról indul)
+                const getRes = await fetch(url, { cache: 'no-store' });
+                const currentViews = await getRes.json();
+                const nextViews = (typeof currentViews === 'number' ? currentViews : 0) + 1;
+
+                // 2. Elmentjük a +1-gyel növelt értéket a közös adatbázisba
+                const putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nextViews)
                 });
-                if (!res.ok) throw new Error('API hiba');
-                const data = await res.json();
-                if (data && typeof data.count === 'number') {
-                    counterEl.textContent = data.count.toLocaleString();
-                    return;
-                }
-            } catch (e) {
-                try {
-                    // 2. Másodlagos globális tartalék szerver (szintén közös minden eszközön)
-                    const fallbackRes = await fetch(`https://abacus.jasoncameron.dev/hit/${namespace}/${key}`, {
-                        cache: 'no-store'
-                    });
-                    const fallbackData = await fallbackRes.json();
-                    if (fallbackData && typeof fallbackData.value === 'number') {
-                        counterEl.textContent = fallbackData.value.toLocaleString();
-                        return;
-                    }
-                } catch (err) {
-                    counterEl.textContent = '1';
-                }
+                const savedViews = await putRes.json();
+
+                // 3. Kiírjuk a kártyára
+                counterEl.textContent = savedViews.toLocaleString();
+            } catch (err) {
+                console.error("Számláló hiba:", err);
+                counterEl.textContent = "0";
             }
         }
-
         // ==========================================
         // LIVE DISCORD PRESENCE (LANYARD API)
         // ==========================================
