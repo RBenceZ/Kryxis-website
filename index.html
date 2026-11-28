@@ -465,23 +465,39 @@
             tick();
         }
 
-        // ==========================================
-        // GLOBÁLIS NÉZETTSÉGSZÁMLÁLÓ (0-RÓL INDUL)
+// ==========================================
+        // VALÓDI GLOBÁLIS NÉZETTSÉGSZÁMLÁLÓ (MINDEN ESZKÖZÖN KÖZÖS)
         // ==========================================
         async function initViewsCounter() {
             const counterEl = document.getElementById('view-counter');
+            const namespace = 'kryxi-bio-hun-2026';
+            const key = 'total-views';
+
             try {
-                const res = await fetch('https://api.counterapi.dev/v1/kryxi-bio-page/views/up');
+                // 1. Elsődleges globális szerver (minden látogatónál +1 a közös adatbázisban)
+                const res = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`, {
+                    cache: 'no-store'
+                });
+                if (!res.ok) throw new Error('API hiba');
                 const data = await res.json();
                 if (data && typeof data.count === 'number') {
                     counterEl.textContent = data.count.toLocaleString();
                     return;
                 }
             } catch (e) {
-                let localViews = parseInt(localStorage.getItem('kryxi_views_v1') || '0', 10);
-                localViews += 1;
-                localStorage.setItem('kryxi_views_v1', localViews.toString());
-                counterEl.textContent = localViews.toLocaleString();
+                try {
+                    // 2. Másodlagos globális tartalék szerver (szintén közös minden eszközön)
+                    const fallbackRes = await fetch(`https://abacus.jasoncameron.dev/hit/${namespace}/${key}`, {
+                        cache: 'no-store'
+                    });
+                    const fallbackData = await fallbackRes.json();
+                    if (fallbackData && typeof fallbackData.value === 'number') {
+                        counterEl.textContent = fallbackData.value.toLocaleString();
+                        return;
+                    }
+                } catch (err) {
+                    counterEl.textContent = '1';
+                }
             }
         }
 
