@@ -107,15 +107,27 @@
             0%, 100% { opacity: 0.45; transform: scale(0.98); }
             50% { opacity: 1; transform: scale(1.02); }
         }
-        /* Main Glass Card */
+        /* Main Glass Card - Világító széllel */
         .profile-card {
             background: var(--card-bg);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            border: 1px solid var(--card-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.38);
+            box-shadow: 
+                0 0 22px rgba(255, 255, 255, 0.16),
+                0 0 45px rgba(255, 255, 255, 0.06),
+                inset 0 0 14px rgba(255, 255, 255, 0.08),
+                0 25px 50px -12px rgba(0, 0, 0, 0.85);
+            transition: transform 0.15s ease-out, box-shadow 0.3s ease, border-color 0.3s ease;
             transform-style: preserve-3d;
+        }
+        .profile-card:hover {
+            border-color: rgba(255, 255, 255, 0.55);
+            box-shadow: 
+                0 0 30px rgba(255, 255, 255, 0.24),
+                0 0 60px rgba(255, 255, 255, 0.1),
+                inset 0 0 18px rgba(255, 255, 255, 0.12),
+                0 25px 50px -12px rgba(0, 0, 0, 0.85);
         }
         /* Username Glow */
         .username-glow {
@@ -238,13 +250,17 @@
         <source src="assets/songg.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Top-Left Volume Control -->
-    <div id="top-controls" class="fixed top-4 right-4 z-30 flex items-center gap-2 opacity-0 transition-opacity duration-700">
-        <div class="flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl hover:border-white/25 transition-all group">
-            <button id="mute-btn" onclick="toggleMute()" class="text-white/80 hover:text-white transition-colors w-4 text-center" title="Mute / Unmute">
+    <!-- Top-Right Expandable Volume Control -->
+    <div id="top-controls" class="fixed top-4 right-4 z-30 flex items-center opacity-0 transition-opacity duration-700">
+        <div class="group flex items-center bg-black/50 backdrop-blur-md border border-white/10 p-2 rounded-2xl hover:border-white/25 transition-all duration-300 shadow-lg">
+            <!-- Kinyíló csúszka sáv (balra nyílik ki az ikon mellől) -->
+            <div class="w-0 overflow-hidden opacity-0 group-hover:w-20 sm:group-hover:w-24 group-hover:opacity-100 group-hover:mr-2.5 group-hover:pl-1.5 transition-all duration-300 ease-out flex items-center">
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.85" oninput="setVolume(this.value)" class="w-20 sm:w-24">
+            </div>
+            <!-- Hangikon gomb -->
+            <button id="mute-btn" onclick="toggleMute()" class="text-white/80 hover:text-white transition-colors w-5 h-5 flex items-center justify-center shrink-0" title="Mute / Unmute">
                 <i id="volume-icon" class="fas fa-volume-high text-xs"></i>
             </button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)" class="w-16 sm:w-20">
         </div>
     </div>
 
@@ -262,11 +278,12 @@
                 <span id="status-dot" class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-[2.5px] border-[#0d0d0d] shadow-[0_0_8px_#34d399]" title="Online"></span>
             </div>
 
-            <!-- Username with Typewriter Effect -->
-            <div class="flex flex-col items-center mb-1">
-                <div class="flex items-center justify-center min-h-[30px]">
-                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight username-glow">
-                        <span id="display-username"></span><span class="cursor-blink text-white/70 font-normal">|</span>
+           <!-- Username with Typewriter Effect (tökéletesen középre igazítva) -->
+            <div class="w-full flex flex-col items-center justify-center mb-1">
+                <div class="flex items-center justify-center min-h-[32px] w-full">
+                    <h1 class="relative inline-flex items-center justify-center text-xl sm:text-2xl font-bold tracking-tight username-glow">
+                        <span id="display-username"></span>
+                        <span class="cursor-blink text-white/70 font-normal absolute -right-2.5">|</span>
                     </h1>
                 </div>
             </div>
@@ -338,8 +355,8 @@
         const DISCORD_USER_ID = "716152825775915059";
 
         const config = {
-            username: "Kryxi",
-            bio: "Your only limits are in your mind. A winner is just a loser who tried once more.",
+            username: "Kryxiツ",
+            bio: "A winner is just a loser who tried once more. Your limits only exist in your mind.",
             location: "Hungary",
             discordTag: "Kryxi_999",
             avatarUrl: "assets/pfp.webp",
@@ -353,11 +370,11 @@
             showParticles: false,
             enableTilt: true,
             socials: [
-                { platform: "tiktok", url: "https://www.tiktok.com/@kryxi07?_r=1&_t=ZN-9507tL1N0kU" },
-                { platform: "instagram", url: "https://www.instagram.com/kryxikaa?igsh=MTV3Ymg2OW1sZnV3OQ%3D%3D&utm_source=qr" },
-                { platform: "twitch", url: "https://www.twitch.tv/kryxikaa" },
-                { platform: "steam", url: "https://steamcommunity.com/profiles/76561199220266064/" },
-                { platform: "twitter", url: "https://x.com/kryxi777?s=21" }
+                { platform: "tiktok", url: "https://www.tiktok.com/@kryxi_999" },
+                { platform: "instagram", url: "https://www.instagram.com/_rb_theone" },
+                { platform: "twitch", url: "https://www.twitch.tv/kryxi_999" },
+                { platform: "steam", url: "https://steamcommunity.com/profiles/76561199235795952/" },
+                { platform: "twitter", url: "https://x.com/kryxi_999" }
             ]
         };
 
